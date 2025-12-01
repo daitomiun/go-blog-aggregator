@@ -33,24 +33,23 @@ func (c Config) SetUser(name string) {
 
 }
 
-func Read() Config {
-
+func Read() (Config, error) {
 	filePath, err := getConfigFilePath()
 	if err != nil {
-		log.Fatalf("Err: %v", err)
+		return Config{}, err
 	}
 	file, err := os.ReadFile(filePath)
 
 	if err != nil {
-		log.Fatalf("Err: %v", err)
+		return Config{}, err
 	}
 
 	var config Config
 
 	if err := json.Unmarshal(file, &config); err != nil {
-		log.Fatalf("Err: %v", err)
+		return Config{}, err
 	}
-	return config
+	return config, nil
 }
 
 func getConfigFilePath() (string, error) {
