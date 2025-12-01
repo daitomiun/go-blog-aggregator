@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/daitonium/go-blog-aggregator/internal/config"
+)
 
 func main() {
-	fmt.Println("hello world")
+	conf := config.Read()
+	conf.SetUser("mateo")
+	conf = config.Read()
+	fmt.Println(conf)
 }
