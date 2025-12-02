@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -14,23 +13,23 @@ type Config struct {
 
 const configFileName = ".gatorconfig.json"
 
-func (c Config) SetUser(name string) {
+func (c Config) SetUser(name string) error {
 	c.CurrentUserName = name
 
 	jsonData, err := json.Marshal(c)
 	if err != nil {
-		log.Fatalf("Err: %v", err)
+		return err
 	}
 
 	filePath, err := getConfigFilePath()
 	if err != nil {
-		log.Fatalf("Err: %v", err)
+		return err
 	}
 
 	if err := os.WriteFile(filePath, jsonData, 0777); err != nil {
-		log.Fatalf("Err: %v", err)
+		return err
 	}
-
+	return nil
 }
 
 func Read() (Config, error) {
