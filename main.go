@@ -1,28 +1,40 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/daitonium/go-blog-aggregator/internal/config"
+	"github.com/daitonium/go-blog-aggregator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 func main() {
 
-	newConf, err := config.Read()
+	cfg, err := config.Read()
 	if err != nil {
 		log.Fatalf("Cannot read config: %v", err)
 	}
 	s := &state{}
-	s.config = &newConf
+	s.cfg = &cfg
 	cmds := &commands{
 		registeredCommands: make(map[string]func(*state, command) error),
 	}
-	cmds.register("login", handlerLogin)
-
 	if len(os.Args) < 2 {
 		log.Fatal("Less than 2 arguments")
 	}
+	cmds.register("login", handlerLogin)
+
+	db, err := sql.Open("postgres", cfg.DbUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
+	s.db = dbQueries
+	cmds.register("register", handlerRegister)
+
 	name, args := os.Args[1], os.Args[2:]
 	if err := cmds.run(s, command{name, args}); err != nil {
 		log.Fatal(err)

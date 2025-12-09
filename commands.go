@@ -1,13 +1,19 @@
 package main
 
 import (
+	"context"
 	"errors"
-	"github.com/daitonium/go-blog-aggregator/internal/config"
 	"log"
+	"time"
+
+	"github.com/daitonium/go-blog-aggregator/internal/config"
+	"github.com/daitonium/go-blog-aggregator/internal/database"
+	"github.com/google/uuid"
 )
 
 type state struct {
-	config *config.Config
+	db  *database.Queries
+	cfg *config.Config
 }
 
 type command struct {
@@ -24,19 +30,52 @@ func handlerLogin(s *state, cmd command) error {
 		return errors.New("No arguments found for command")
 	}
 	userName := cmd.args[0]
+	if _, err := s.db.GetUser(context.Background(), userName); err != nil {
+		log.Fatalf("%v, for %s", err, userName)
+	}
 
-	if err := s.config.SetUser(userName); err != nil {
+	if err := s.cfg.SetUser(userName); err != nil {
 		return err
 	}
 
-	log.Printf("The username %s has been set \n", s.config.CurrentUserName)
+	log.Printf("The username %s has been set \n", s.cfg.CurrentUserName)
+	return nil
+}
+
+func handlerRegister(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return errors.New("No arguments found for command")
+	}
+	name := cmd.args[0]
+	if len(name) == 0 {
+		return errors.New("Name is empty, please add a name to register")
+	}
+	_, err := s.db.GetUser(context.Background(), name)
+	if err == nil {
+		return errors.New("Name already exists, try with another name")
+	}
+
+	userParams := database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      name,
+	}
+
+	newUser, err := s.db.CreateUser(context.Background(), userParams)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.cfg.SetUser(newUser.Name)
+	log.Println("New user created and set")
+	log.Printf("user data: %v \n", newUser)
+
 	return nil
 }
 
 func (c *commands) run(s *state, cmd command) error {
 	handler, exists := c.registeredCommands[cmd.name]
 	if !exists {
-		log.Println("test exists")
 		return errors.New("Command not found")
 	}
 	return handler(s, cmd)
