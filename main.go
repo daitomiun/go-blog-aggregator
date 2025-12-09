@@ -25,6 +25,8 @@ func main() {
 		log.Fatal("Less than 2 arguments")
 	}
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
 
 	db, err := sql.Open("postgres", cfg.DbUrl)
 	if err != nil {
@@ -33,10 +35,10 @@ func main() {
 	dbQueries := database.New(db)
 
 	s.db = dbQueries
-	cmds.register("register", handlerRegister)
 
 	name, args := os.Args[1], os.Args[2:]
 	if err := cmds.run(s, command{name, args}); err != nil {
 		log.Fatal(err)
 	}
+
 }

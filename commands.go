@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"os"
 	"time"
 
 	"github.com/daitonium/go-blog-aggregator/internal/config"
@@ -64,12 +65,21 @@ func handlerRegister(s *state, cmd command) error {
 
 	newUser, err := s.db.CreateUser(context.Background(), userParams)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	s.cfg.SetUser(newUser.Name)
 	log.Println("New user created and set")
 	log.Printf("user data: %v \n", newUser)
 
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	if err := s.db.DeleteUsers(context.Background()); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Users deleted succesfully")
+	os.Exit(0)
 	return nil
 }
 
