@@ -9,6 +9,7 @@ import (
 
 	"github.com/daitonium/go-blog-aggregator/internal/config"
 	"github.com/daitonium/go-blog-aggregator/internal/database"
+	"github.com/daitonium/go-blog-aggregator/internal/rss"
 	"github.com/google/uuid"
 )
 
@@ -98,6 +99,16 @@ func handlerUsers(s *state, cmd command) error {
 	os.Exit(0)
 	return nil
 
+}
+
+func handlerAggregator(s *state, cmd command) error {
+	feed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+	log.Printf("Feed: %+v\n", feed)
+
+	return nil
 }
 
 func (c *commands) run(s *state, cmd command) error {
