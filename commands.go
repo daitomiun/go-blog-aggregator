@@ -111,6 +111,46 @@ func handlerAggregator(s *state, cmd command) error {
 	return nil
 }
 
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return errors.New("Not sufficient arguments for command (needs title and url)")
+	}
+
+	nameArg := cmd.args[0]
+
+	if len(nameArg) == 0 {
+		return errors.New("Name cannot be null")
+	}
+
+	urlArg := cmd.args[1]
+
+	if len(urlArg) == 0 {
+		return errors.New("Url cannot be null")
+	}
+
+	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+
+	if err != nil {
+		return err
+	}
+
+	feedParam := database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      nameArg,
+		Url:       urlArg,
+		UserID:    user.ID,
+	}
+
+	newFeed, err := s.db.CreateFeed(context.Background(), feedParam)
+	if err != nil {
+		return err
+	}
+	log.Println(newFeed)
+	return nil
+}
+
 func (c *commands) run(s *state, cmd command) error {
 	handler, exists := c.registeredCommands[cmd.name]
 	if !exists {
